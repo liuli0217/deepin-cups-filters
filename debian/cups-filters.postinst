@@ -1,0 +1,23 @@
+#!/bin/bash
+check_ko_list()
+{
+    # /lib/modules 不存在（如 chroot 装包时内核尚未安装）则保留默认配置，直接返回
+    [ -d /lib/modules ] || return 0
+    ko_list=("lp" "ppdev" "parport_pc")
+    for ko_name in ${ko_list[@]}; do
+        sed -i "/^${ko_name}$/d" /etc/modules-load.d/cups-filters.conf
+        for kdir in /lib/modules/*/; do
+            [ -d "$kdir" ] || continue
+            if find "${kdir}kernel/drivers" -name "${ko_name}.ko" 2>/dev/null | grep -q .; then
+                echo "${ko_name}" >> /etc/modules-load.d/cups-filters.conf
+                break
+            fi
+        done
+    done
+}
+# Automatically added by dh_installdeb/13.3.3~bpo10+1
+dpkg-maintscript-helper rm_conffile /etc/fonts/conf.d/99pdftoopvp.conf 1.18.0-3\~ -- "$@"
+# End automatically added section
+check_ko_list
+# Make sure the script returns 0
+true
